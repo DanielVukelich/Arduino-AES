@@ -1,6 +1,5 @@
 #include "Rijndael_Consts.h"
 #include "Rijndael.h"
-#include "stdbool.h"
 
 //Rotates a 4 byte word amount bytes to the left
 void Rotate(const int amount, unsigned char* input){
@@ -97,7 +96,7 @@ void Schedule_Keys(enum RIJNDAEL_TYPE type, const unsigned char* key, const int 
   return;
 }
 
-void sub_bytes(unsigned char box[4][4], bool inv){
+void sub_bytes(unsigned char box[4][4], int inv){
   const unsigned char* lookupTable = SBOX;
   if(inv)
     lookupTable = SBOX_INVERSE;
@@ -109,7 +108,7 @@ void sub_bytes(unsigned char box[4][4], bool inv){
   return;
 }
 
-void shift_rows(unsigned char box[4][4], bool inv){
+void shift_rows(unsigned char box[4][4], int inv){
   for(int shift = 1; shift < 4; ++shift){
     if(inv)
       Rotate(shift, box[4 - shift]);
@@ -119,7 +118,7 @@ void shift_rows(unsigned char box[4][4], bool inv){
   return;
 }
 
-void mix_cols(unsigned char box[4][4], bool inv){
+void mix_cols(unsigned char box[4][4], int inv){
   unsigned char tbox[4][4];
   const unsigned char* mult_values = MIX_COL;
   if(inv)
@@ -200,10 +199,10 @@ void Encrypt(enum RIJNDAEL_TYPE type, const unsigned char* plaintext, const int 
 
     //Perform our round operations
     for(int curround = 1; curround <= rounds; ++curround){
-      sub_bytes(box, false);
-      shift_rows(box, false);
+      sub_bytes(box, 0);
+      shift_rows(box, 0);
       if(curround != rounds)
-	mix_cols(box, false);
+	mix_cols(box, 0);
       add_keys(box, keys, curround);
     }
 
@@ -243,11 +242,11 @@ void Decrypt(enum RIJNDAEL_TYPE type, const unsigned char* ciphertext, const int
 
     //Perform our round operations
     for(int curround = rounds - 1; curround >= 0; --curround){
-      shift_rows(box, true);
-      sub_bytes(box, true);
+      shift_rows(box, 1);
+      sub_bytes(box, 1);
       add_keys(box, keys, curround);
       if(curround != 0)
-	mix_cols(box, true);
+	mix_cols(box, 1);
     }
 
     //Copy the 4x4 array into our plaintext
