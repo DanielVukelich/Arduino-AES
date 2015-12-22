@@ -1,3 +1,6 @@
+#ifndef RIJNDAEL_H
+#define RIJNDAEL_H
+
 enum RIJNDAEL_TYPE {
   AES_128,
   AES_192,
@@ -15,3 +18,5 @@ void Encrypt_Block(enum RIJNDAEL_TYPE, const unsigned char*, const unsigned char
 void Decrypt_Block(enum RIJNDAEL_TYPE, const unsigned char*, const unsigned char*, unsigned char*);
 
 void Apply_OFB_Mode(enum RIJNDAEL_TYPE, const unsigned char*, const int, const unsigned char*, const unsigned char*, unsigned char*);
+
+#endif
