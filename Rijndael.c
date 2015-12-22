@@ -175,7 +175,18 @@ void add_keys(unsigned char box[4][4], const unsigned char* keys, const int roun
 
 //Assumes plaintext has already been padded to have length of multiple 16
 void Encrypt(enum RIJNDAEL_TYPE type, const unsigned char* plaintext, const int plaintext_len, const unsigned char* keys,  unsigned char* cipher){
-  //Address box as box[row][column]
+  for(int i = 0; i < plaintext_len; i += 16){
+    Encrypt_Block(type, plaintext + i, keys, cipher + i);
+  }
+}
+
+void Decrypt(enum RIJNDAEL_TYPE type, const unsigned char* ciphertext, const int plaintext_len, const unsigned char* keys,  unsigned char* plain){
+  for(int i = 0; i < plaintext_len; i += 16){
+    Decrypt_Block(type, ciphertext + i, keys, plain + i);
+  }
+}
+
+void Encrypt_Block(enum RIJNDAEL_TYPE type, const unsigned char* plaintext, const unsigned char* keys, unsigned char* cipher){
   unsigned char box[4][4];
   int rounds = 0;
   switch(type){
@@ -189,35 +200,34 @@ void Encrypt(enum RIJNDAEL_TYPE type, const unsigned char* plaintext, const int 
     rounds = 14;
     break;
   }
-  for(int iter = 0; iter < plaintext_len; iter += 16){
-    //Load our plaintext into the 4x4 byte array and immediately add the initial round key
-    for(int row = 0; row < 4; ++row){
-      for(int col = 0; col < 4; ++col){
-	box[col][row] = plaintext[iter + (4 * row + col)] ^ keys[(4 * row + col)];
-      }
-    }
 
-    //Perform our round operations
-    for(int curround = 1; curround <= rounds; ++curround){
-      sub_bytes(box, 0);
-      shift_rows(box, 0);
-      if(curround != rounds)
-	mix_cols(box, 0);
-      add_keys(box, keys, curround);
-    }
-
-    //Copy the 4x4 array into our ciphertext
-    for(int row = 0; row < 4; ++row){
-      for(int col = 0; col < 4; ++col){
-	cipher[iter + (4 * row + col)] = box[col][row];
-      }
+  //Load our plaintext into the 4x4 byte array and immediately add the initial round key
+  for(int row = 0; row < 4; ++row){
+    for(int col = 0; col < 4; ++col){
+      box[col][row] = plaintext[4 * row + col] ^ keys[(4 * row + col)];
     }
   }
+
+  //Perform our round operations
+  for(int curround = 1; curround <= rounds; ++curround){
+    sub_bytes(box, 0);
+    shift_rows(box, 0);
+    if(curround != rounds)
+      mix_cols(box, 0);
+    add_keys(box, keys, curround);
+  }
+  
+  //Copy the 4x4 array into our ciphertext
+  for(int row = 0; row < 4; ++row){
+    for(int col = 0; col < 4; ++col){
+      cipher[4 * row + col] = box[col][row];
+    }
+  }
+  
   return;
 }
 
-void Decrypt(enum RIJNDAEL_TYPE type, const unsigned char* ciphertext, const int plaintext_len, const unsigned char* keys,  unsigned char* plain){
-  //Address box as box[row][column]
+void Decrypt_Block(enum RIJNDAEL_TYPE type, const unsigned char* ciphertext, const unsigned char* keys, unsigned char* plain){
   unsigned char box[4][4];
   int rounds = 0;
   switch(type){
@@ -232,29 +242,28 @@ void Decrypt(enum RIJNDAEL_TYPE type, const unsigned char* ciphertext, const int
     break;
   }
   
-  for(int iter = 0; iter < plaintext_len; iter += 16){
     //Load our ciphertext into the 4x4 byte array and immediately add the initial round key
-    for(int row = 0; row < 4; ++row){
-      for(int col = 0; col < 4; ++col){
-	box[col][row] = ciphertext[iter + (4 * row + col)] ^ keys[(rounds) * 16 + (4 * row + col)];
-      }
-    }
-
-    //Perform our round operations
-    for(int curround = rounds - 1; curround >= 0; --curround){
-      shift_rows(box, 1);
-      sub_bytes(box, 1);
-      add_keys(box, keys, curround);
-      if(curround != 0)
-	mix_cols(box, 1);
-    }
-
-    //Copy the 4x4 array into our plaintext
-    for(int row = 0; row < 4; ++row){
-      for(int col = 0; col < 4; ++col){
-	plain[iter + (4 * row + col)] = box[col][row];
-      }
+  for(int row = 0; row < 4; ++row){
+    for(int col = 0; col < 4; ++col){
+      box[col][row] = ciphertext[4 * row + col] ^ keys[(rounds) * 16 + (4 * row + col)];
     }
   }
+  
+  //Perform our round operations
+  for(int curround = rounds - 1; curround >= 0; --curround){
+    shift_rows(box, 1);
+    sub_bytes(box, 1);
+    add_keys(box, keys, curround);
+    if(curround != 0)
+      mix_cols(box, 1);
+  }
+  
+  //Copy the 4x4 array into our plaintext
+  for(int row = 0; row < 4; ++row){
+    for(int col = 0; col < 4; ++col){
+      plain[4 * row + col] = box[col][row];
+    }
+  }
+  
   return;
 }

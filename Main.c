@@ -60,6 +60,7 @@ int main(){
       return 1;
     }
   }
+
   for(int i = 0; i < 16; ++i){
     if(plain[i] != text[i]){
       printf("\nDecrypted message does not match original plaintext!\n");
