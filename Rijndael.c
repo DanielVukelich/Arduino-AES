@@ -285,11 +285,11 @@ void Apply_OFB_Mode(enum RIJNDAEL_TYPE type, const unsigned char* plaintext, con
 
   for(int i = 0; i < plainlength; i += BLOCK_SIZE){
     Encrypt_Block(type, iv_one, keys, iv_two);
-    char* t = iv_one;
+    unsigned char* t = iv_one;
     iv_one = iv_two;
     iv_two = t;
     for(int j = 0; j < BLOCK_SIZE; ++j){
-      cipher[BLOCK_SIZE * i + j] = plaintext[BLOCK_SIZE * i + j] ^ iv_one[j];
+      cipher[i + j] = plaintext[i + j] ^ iv_one[j];
     }
   }
   return;

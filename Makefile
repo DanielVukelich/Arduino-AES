@@ -1,4 +1,4 @@
-CFLAGS = -std=c99
+CFLAGS = -std=c99 -Wall -Werror
 CC = gcc
 
 debug:	CFLAGS += -g -DDEBUG
