@@ -13,7 +13,11 @@ unsigned char key[32] = {
     0x1c, 0x1d, 0x1e, 0x1f
   };
   
-  unsigned char text[16] = {
+  unsigned char text[32] = {
+    0x00, 0x11, 0x22, 0x33,
+    0x44, 0x55, 0x66, 0x77,
+    0x88, 0x99, 0xAA, 0xBB,
+    0xCC, 0xDD, 0xEE, 0xFF,
     0x00, 0x11, 0x22, 0x33,
     0x44, 0x55, 0x66, 0x77,
     0x88, 0x99, 0xAA, 0xBB,
@@ -29,6 +33,9 @@ unsigned char key[32] = {
   
 
 int main(){
+
+  printf("Testing ECB mode:\n");
+
   printf("Original Plaintext:\n");
   for(int i = 0; i < 16; ++i){
     printf("%2.2X ", text[i]);
@@ -37,7 +44,7 @@ int main(){
   unsigned char keys[240];
   Schedule_Keys(AES_256, key, 32, keys);
   
-  unsigned char cipher[16];
+  unsigned char cipher[32];
   Encrypt(AES_256, text, 16, keys, cipher);
 
   printf("\n\nCiphertext:\n");
@@ -45,7 +52,7 @@ int main(){
     printf("%2.2X ", cipher[i]);
   }
 
-  unsigned char plain[16];
+  unsigned char plain[32];
   Decrypt(AES_256, cipher, 16, keys, plain);
 
   printf("\n\nDecrypted Plaintext:\n");
@@ -68,6 +75,45 @@ int main(){
     }
   }
   
-  printf("\n\nTests Passed!\n");
+  printf("\n\nECB Test Passed!\n");
+
+  printf("\nTesting OFB mode:\n");
+  printf("Original Plaintext:\n");
+  
+  for(int i = 0; i < 32; ++i){
+    printf("%2.2X ", text[i]);
+  }
+
+  const unsigned char iv[16] = {
+    0x00, 0x11, 0x22, 0x33,
+    0x44, 0x55, 0x66, 0x77,
+    0x88, 0x99, 0xAA, 0xBB,
+    0xCC, 0xDD, 0xEE, 0xFF
+  };
+
+  Apply_OFB_Mode(AES_256, text, 32, iv, keys, cipher);
+
+  printf("\n\nCiphertext:\n");
+  for(int i = 0; i < 32; ++i){
+    printf("%2.2X ", cipher[i]);
+  }
+
+  Apply_OFB_Mode(AES_256, cipher, 32, iv, keys, plain);
+
+  printf("\n\nDecrypted Plaintext:\n");
+  for(int i = 0; i < 32; ++i){
+    printf("%2.2X ", plain[i]);
+  }
+
+  
+  for(int i = 0; i < 32; ++i){
+    if(plain[i] != text[i]){
+      printf("\nDecrypted message does not match original plaintext!\n");
+      return 1;
+    }
+  }
+
+  printf("\n\nOFB Test Passed!\n");
+
   return 0;
 }

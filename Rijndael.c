@@ -1,6 +1,12 @@
 #include "Rijndael_Consts.h"
 #include "Rijndael.h"
 
+#define BLOCK_SIZE 16
+
+//Necessary for implementing various modes of operation
+unsigned char IV_ONE[BLOCK_SIZE];
+unsigned char IV_TWO[BLOCK_SIZE];
+
 //Rotates a 4 byte word amount bytes to the left
 void Rotate(const int amount, unsigned char* input){
   for(int i = 0; i < amount; ++i){
@@ -167,7 +173,7 @@ void mix_cols(unsigned char box[4][4], int inv){
 void add_keys(unsigned char box[4][4], const unsigned char* keys, const int round){
   for(int row = 0; row < 4; ++row){
     for(int col = 0; col < 4; ++col){
-      box[col][row] ^= keys[16 * round + ((4 * row) + col)];
+      box[col][row] ^= keys[BLOCK_SIZE * round + ((4 * row) + col)];
     }
   }
   return;
@@ -175,13 +181,13 @@ void add_keys(unsigned char box[4][4], const unsigned char* keys, const int roun
 
 //Assumes plaintext has already been padded to have length of multiple 16
 void Encrypt(enum RIJNDAEL_TYPE type, const unsigned char* plaintext, const int plaintext_len, const unsigned char* keys,  unsigned char* cipher){
-  for(int i = 0; i < plaintext_len; i += 16){
+  for(int i = 0; i < plaintext_len; i += BLOCK_SIZE){
     Encrypt_Block(type, plaintext + i, keys, cipher + i);
   }
 }
 
 void Decrypt(enum RIJNDAEL_TYPE type, const unsigned char* ciphertext, const int plaintext_len, const unsigned char* keys,  unsigned char* plain){
-  for(int i = 0; i < plaintext_len; i += 16){
+  for(int i = 0; i < plaintext_len; i += BLOCK_SIZE){
     Decrypt_Block(type, ciphertext + i, keys, plain + i);
   }
 }
@@ -245,7 +251,7 @@ void Decrypt_Block(enum RIJNDAEL_TYPE type, const unsigned char* ciphertext, con
     //Load our ciphertext into the 4x4 byte array and immediately add the initial round key
   for(int row = 0; row < 4; ++row){
     for(int col = 0; col < 4; ++col){
-      box[col][row] = ciphertext[4 * row + col] ^ keys[(rounds) * 16 + (4 * row + col)];
+      box[col][row] = ciphertext[4 * row + col] ^ keys[(rounds) * BLOCK_SIZE + (4 * row + col)];
     }
   }
   
@@ -265,5 +271,26 @@ void Decrypt_Block(enum RIJNDAEL_TYPE type, const unsigned char* ciphertext, con
     }
   }
   
+  return;
+}
+
+void Apply_OFB_Mode(enum RIJNDAEL_TYPE type, const unsigned char* plaintext, const int plainlength, const unsigned char* iv, const unsigned char* keys, unsigned char* cipher){
+
+  unsigned char* iv_one = IV_ONE;
+  unsigned char* iv_two = IV_TWO;
+
+  for(int i = 0; i < BLOCK_SIZE; ++i){
+    iv_one[i] = iv[i]; 
+  }
+
+  for(int i = 0; i < plainlength; i += BLOCK_SIZE){
+    Encrypt_Block(type, iv_one, keys, iv_two);
+    char* t = iv_one;
+    iv_one = iv_two;
+    iv_two = t;
+    for(int j = 0; j < BLOCK_SIZE; ++j){
+      cipher[BLOCK_SIZE * i + j] = plaintext[BLOCK_SIZE * i + j] ^ iv_one[j];
+    }
+  }
   return;
 }
