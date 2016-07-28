@@ -1,4 +1,7 @@
 # Arduino-AES
+
+WARNING:  Do not use this in any situation that requires actualy cryptographic security.  While this library does perform AES encryption, it has not been checked for security.  This means it could be vulnerable to side channel attacks, buffer overflows, and all sorts of nasty stuff.  Please use a library that has been inspected for security.
+
 A small library for the arduino that implements the AES (Rijndael) Cryptrosystem
 
 I originally wrote this for the arduino.  To that end, I've written it to use as few libraries as possible.  This means that it's not very memory safe.  However, if it's on an embedded device like an arduino, whoever is using it should have lots of control over how it's used, so there shouldn't be a problem.  I chose C instead of C++ because I may want to use this simple library in my operating system, DOSDOS.
